@@ -29,7 +29,7 @@ export function Tetris() {
         case "Space":
           dispatch({ type: "HARD_DROP" });
           break;
-        case "KeyP":
+        case "KeyQ":
           dispatch({ type: "PAUSE_GAME" });
           break;
       }
@@ -164,9 +164,19 @@ export function Tetris() {
               <h2 className="text-xl">Level</h2>
               <p className="text-2xl font-bold">{state.level}</p>
             </div>
-            <div>
+            <div className="mb-4">
               <h2 className="text-xl">Lines</h2>
               <p className="text-2xl font-bold">{state.lines}</p>
+            </div>
+          </div>
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+            <h2 className="text-xl mb-3">Controls</h2>
+            <div className="space-y-2 text-sm">
+              <p>← → : Move left/right</p>
+              <p>↓ : Move down</p>
+              <p>↑ : Rotate</p>
+              <p>Space : Hard drop</p>
+              <p>Q : Pause game</p>
             </div>
           </div>
         </div>
