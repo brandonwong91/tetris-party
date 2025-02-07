@@ -60,7 +60,7 @@ export function Tetris() {
 
     const style = {
       backgroundColor: ghost ? "#ffffff33" : TETROMINOS[cell].color,
-      border: "1px solid rgba(255, 255, 255, 0.1)",
+      border: "1px solid rgba(255, 255, 255, 0.3)",
     };
 
     return <div className="w-full h-full" style={style} />;
@@ -103,7 +103,10 @@ export function Tetris() {
     return board.map((row, y) => (
       <div key={y} className="flex">
         {row.map((cell, x) => (
-          <div key={`${y}-${x}`} className="w-6 h-6">
+          <div
+            key={`${y}-${x}`}
+            className="w-6 h-6 border-dotted border-gray-900 border-y-2 border-x-2"
+          >
             {renderCell(cell)}
           </div>
         ))}
