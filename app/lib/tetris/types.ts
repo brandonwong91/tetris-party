@@ -17,6 +17,8 @@ export type GameState = {
   board: (TetrominoType | null)[][];
   currentPiece: Tetromino | null;
   nextPiece: Tetromino | null;
+  heldPiece: Tetromino | null;
+  canHold: boolean;
   score: number;
   level: number;
   lines: number;
@@ -30,6 +32,7 @@ export type GameAction =
   | { type: "MOVE_DOWN" }
   | { type: "ROTATE" }
   | { type: "HARD_DROP" }
+  | { type: "HOLD_PIECE" }
   | { type: "START_GAME" }
   | { type: "PAUSE_GAME" }
   | { type: "GAME_OVER" };

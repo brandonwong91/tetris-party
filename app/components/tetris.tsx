@@ -32,6 +32,9 @@ export function Tetris() {
         case "KeyQ":
           dispatch({ type: "PAUSE_GAME" });
           break;
+        case "KeyS":
+          dispatch({ type: "HOLD_PIECE" });
+          break;
       }
     },
     [state.isGameOver]
@@ -108,10 +111,14 @@ export function Tetris() {
     ));
   };
 
-  const renderPreview = () => {
-    if (!state.nextPiece) return null;
+  const renderPiece = (piece: TetrominoType | null) => {
+    if (!piece) return null;
 
-    const shape = getTetrominoShape(state.nextPiece);
+    const shape = getTetrominoShape({
+      type: piece,
+      position: { x: 0, y: 0 },
+      rotation: 0,
+    });
     const previewGrid = Array(4)
       .fill(null)
       .map(() => Array(4).fill(false));
@@ -134,9 +141,7 @@ export function Tetris() {
         {previewGrid.map((row, y) =>
           row.map((cell, x) => (
             <div key={`${y}-${x}`} className="w-6 h-6">
-              {cell && state?.nextPiece
-                ? renderCell(state.nextPiece.type)
-                : null}
+              {cell ? renderCell(piece) : null}
             </div>
           ))
         )}
@@ -147,13 +152,17 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
       <div className="flex gap-8">
-        <div className="border border-gray-700 p-2 bg-gray-800">
+        <div className="border border-gray-700 p-2 bg-gray-800 h-fit">
           {renderBoard()}
         </div>
         <div className="flex flex-col gap-4">
           <div className="p-4 bg-gray-800 border border-gray-700 rounded">
             <h2 className="text-xl mb-2">Next Piece</h2>
-            {renderPreview()}
+            {state.nextPiece && renderPiece(state.nextPiece.type)}
+          </div>
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+            <h2 className="text-xl mb-2">Held Piece</h2>
+            {renderPiece(state.heldPiece?.type || null)}
           </div>
           <div className="p-4 bg-gray-800 border border-gray-700 rounded">
             <div className="mb-2">
@@ -176,6 +185,7 @@ export function Tetris() {
               <p>↓ : Move down</p>
               <p>↑ : Rotate</p>
               <p>Space : Hard drop</p>
+              <p>S : Hold piece</p>
               <p>Q : Pause game</p>
             </div>
           </div>

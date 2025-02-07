@@ -5,6 +5,7 @@ import {
   POINTS_TRIPLE,
   POINTS_TETRIS,
   LEVEL_LINES,
+  BOARD_WIDTH,
 } from "./constants";
 import {
   createEmptyBoard,
@@ -20,6 +21,8 @@ export const createInitialState = (): GameState => ({
   board: createEmptyBoard(),
   currentPiece: null,
   nextPiece: null,
+  heldPiece: null,
+  canHold: true,
   score: 0,
   level: 1,
   lines: 0,
@@ -80,6 +83,7 @@ const movePiece = (state: GameState, dx: number, dy: number): GameState => {
       score: state.score + points,
       level: newLevel,
       lines: newLines,
+      canHold: true,
     };
   }
 
@@ -151,6 +155,36 @@ export const gameReducer = (
 
     case "HARD_DROP":
       return hardDrop(state);
+
+    case "HOLD_PIECE":
+      if (
+        !state.currentPiece ||
+        state.isGameOver ||
+        state.isPaused ||
+        !state.canHold
+      ) {
+        return state;
+      }
+
+      const heldPiece = state.heldPiece
+        ? {
+            ...state.heldPiece,
+            position: { x: Math.floor(BOARD_WIDTH / 2) - 1, y: 0 },
+          }
+        : null;
+
+      return {
+        ...state,
+        currentPiece: heldPiece || state.nextPiece,
+        nextPiece: heldPiece
+          ? state.nextPiece
+          : createTetromino(getRandomTetrominoType()),
+        heldPiece: {
+          ...state.currentPiece,
+          position: { x: Math.floor(BOARD_WIDTH / 2) - 1, y: 0 },
+        },
+        canHold: false,
+      };
 
     case "GAME_OVER":
       return { ...state, isGameOver: true };
