@@ -1,0 +1,7 @@
+{
+  "name": "tetris-party",
+  "main": "party/tetris.ts",
+  "parties": {
+    "tetris": "party/tetris.ts"
+  }
+}

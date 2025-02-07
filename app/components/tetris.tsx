@@ -1,13 +1,35 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
+import { PARTYKIT_HOST } from "../lib/constants";
 import { INITIAL_GRAVITY, TETROMINOS } from "../lib/tetris/constants";
 import { gameReducer, createInitialState } from "../lib/tetris/reducer";
 import { getGhostPosition, getTetrominoShape } from "../lib/tetris/utils";
 import { TetrominoType } from "../lib/tetris/types";
+import usePartySocket from "partysocket/react";
 
 export function Tetris() {
   const [state, dispatch] = useReducer(gameReducer, null, createInitialState);
+  const [players, setPlayers] = useState<
+    Array<{
+      id: string;
+      board: (string | null)[][];
+      score: number;
+      level: number;
+      lines: number;
+    }>
+  >([]);
+
+  const socket = usePartySocket({
+    host: PARTYKIT_HOST,
+    room: "tetris",
+    onMessage(event) {
+      const data = JSON.parse(event.data);
+      if (data.players) {
+        setPlayers(data.players);
+      }
+    },
+  });
   const [showControls, setShowControls] = useState(false);
 
   const handleKeyDown = useCallback(
@@ -53,8 +75,27 @@ export function Tetris() {
       dispatch({ type: "MOVE_DOWN" });
     }, INITIAL_GRAVITY / state.level);
 
+    // Send game state to server
+    socket.send(
+      JSON.stringify({
+        board: state.board,
+        score: state.score,
+        level: state.level,
+        lines: state.lines,
+      })
+    );
+
     return () => clearInterval(interval);
-  }, [state.currentPiece, state.isGameOver, state.isPaused, state.level]);
+  }, [
+    state.currentPiece,
+    state.isGameOver,
+    state.isPaused,
+    state.level,
+    state.board,
+    state.score,
+    state.lines,
+    socket,
+  ]);
 
   const renderCell = (cell: TetrominoType | null, ghost = false) => {
     if (!cell) return null;
@@ -156,6 +197,38 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
       <div className="flex gap-8">
+        {/* Other players' boards */}
+        <div className="flex gap-4">
+          {players.map((player) => (
+            <div
+              key={player.id}
+              className="border border-gray-700 p-2 bg-gray-800 h-fit"
+            >
+              <div className="text-sm mb-2">Player {player.id}</div>
+              {player.board.map((row, y) => (
+                <div key={y} className="flex">
+                  {row.map((cell, x) => (
+                    <div
+                      key={`${y}-${x}`}
+                      className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
+                    >
+                      {cell && (
+                        <div
+                          className="w-full h-full"
+                          style={{
+                            backgroundColor:
+                              TETROMINOS[cell as TetrominoType].color,
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div className="text-sm mt-2">Score: {player.score}</div>
+            </div>
+          ))}
+        </div>
         <div className="border border-gray-700 p-2 bg-gray-800 h-fit">
           {renderBoard()}
         </div>
