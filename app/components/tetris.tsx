@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { INITIAL_GRAVITY, TETROMINOS } from "../lib/tetris/constants";
 import { gameReducer, createInitialState } from "../lib/tetris/reducer";
 import { getGhostPosition, getTetrominoShape } from "../lib/tetris/utils";
@@ -8,6 +8,7 @@ import { TetrominoType } from "../lib/tetris/types";
 
 export function Tetris() {
   const [state, dispatch] = useReducer(gameReducer, null, createInitialState);
+  const [showControls, setShowControls] = useState(false);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -182,15 +183,25 @@ export function Tetris() {
             </div>
           </div>
           <div className="p-4 bg-gray-800 border border-gray-700 rounded">
-            <h2 className="text-xl mb-3">Controls</h2>
-            <div className="space-y-2 text-sm">
-              <p>← → : Move left/right</p>
-              <p>↓ : Move down</p>
-              <p>↑ : Rotate</p>
-              <p>Space : Hard drop</p>
-              <p>S : Hold piece</p>
-              <p>Q : Pause game</p>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl">Controls</h2>
+              <button
+                onClick={() => setShowControls(!showControls)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                {showControls ? "▼" : "▶"}
+              </button>
             </div>
+            {showControls && (
+              <div className="space-y-2 text-sm">
+                <p>← → : Move left/right</p>
+                <p>↓ : Move down</p>
+                <p>↑ : Rotate</p>
+                <p>Space : Hard drop</p>
+                <p>S : Hold piece</p>
+                <p>Q : Pause game</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
