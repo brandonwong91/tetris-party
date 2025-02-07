@@ -204,7 +204,13 @@ export function Tetris() {
               key={player.id}
               className="border border-gray-700 p-2 bg-gray-800 h-fit"
             >
-              <div className="text-sm mb-2">Player {player.id}</div>
+              <div className="text-sm mb-2 flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: "#22c55e" }}
+                />
+                Player {player.id.slice(0, 4)}
+              </div>
               {player.board.map((row, y) => (
                 <div key={y} className="flex">
                   {row.map((cell, x) => (
