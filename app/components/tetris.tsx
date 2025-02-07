@@ -207,43 +207,58 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
       <div className="flex gap-8">
-        {/* Other players' boards */}
-        <div className="flex gap-4">
-          {players.map((player) => (
-            <div
-              key={player.id}
-              className="border border-gray-700 p-2 bg-gray-800 h-fit"
-            >
-              <div className="text-sm mb-2 flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: "#22c55e" }}
-                />
-                {playerNames[player.id] || `Player ${player.id.slice(0, 4)}`}
-              </div>
-              {player.board.map((row, y) => (
-                <div key={y} className="flex">
-                  {row.map((cell, x) => (
-                    <div
-                      key={`${y}-${x}`}
-                      className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
-                    >
-                      {cell && (
-                        <div
-                          className="w-full h-full"
-                          style={{
-                            backgroundColor:
-                              TETROMINOS[cell as TetrominoType].color,
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
+        <div className="flex flex-col gap-4">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+            <h2 className="text-xl mb-4">Online Players</h2>
+            <div className="space-y-2">
+              {players.map((player) => (
+                <div key={player.id} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span>
+                    {playerNames[player.id] ||
+                      `Player ${player.id.slice(0, 4)}`}
+                  </span>
                 </div>
               ))}
-              <div className="text-sm mt-2">Score: {player.score}</div>
             </div>
-          ))}
+          </div>
+          <div className="flex gap-4">
+            {players.map((player) => (
+              <div
+                key={player.id}
+                className="border border-gray-700 p-2 bg-gray-800 h-fit"
+              >
+                <div className="text-sm mb-2 flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: "#22c55e" }}
+                  />
+                  {playerNames[player.id] || `Player ${player.id.slice(0, 4)}`}
+                </div>
+                {player.board.map((row, y) => (
+                  <div key={y} className="flex">
+                    {row.map((cell, x) => (
+                      <div
+                        key={`${y}-${x}`}
+                        className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
+                      >
+                        {cell && (
+                          <div
+                            className="w-full h-full"
+                            style={{
+                              backgroundColor:
+                                TETROMINOS[cell as TetrominoType].color,
+                            }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <div className="text-sm mt-2">Score: {player.score}</div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="border border-gray-700 p-2 bg-gray-800 h-fit">
           {renderBoard()}
