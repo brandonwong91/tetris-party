@@ -1,7 +1,9 @@
+import { generateUsername } from "@/app/lib/username";
 import type * as Party from "partykit/server";
 
 type GameState = {
   players: Map<string, PlayerState>;
+  usernames: Map<string, string>;
 };
 
 type PlayerState = {
@@ -14,6 +16,7 @@ type PlayerState = {
 export default class TetrisParty implements Party.Server {
   private gameState: GameState = {
     players: new Map(),
+    usernames: new Map(),
   };
 
   constructor(readonly party: Party.Party) {}
@@ -28,6 +31,12 @@ export default class TetrisParty implements Party.Server {
       level: 1,
       lines: 0,
     });
+
+    // Generate username if not exists
+    if (!this.gameState.usernames.has(conn.id)) {
+      const username = generateUsername();
+      this.gameState.usernames.set(conn.id, username);
+    }
 
     // Broadcast updated player list
     this.broadcastGameState();
@@ -58,7 +67,12 @@ export default class TetrisParty implements Party.Server {
   private broadcastGameState() {
     // Convert Map to array for JSON serialization
     const players = Array.from(this.gameState.players.entries()).map(
-      ([id, state]) => ({ id, ...state })
+      ([id, state]) => ({
+        id,
+        ...state,
+        username:
+          this.gameState.usernames.get(id) || `Player ${id.slice(0, 4)}`,
+      })
     );
 
     this.party.broadcast(JSON.stringify({ players }));

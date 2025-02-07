@@ -6,7 +6,6 @@ import { INITIAL_GRAVITY, TETROMINOS } from "../lib/tetris/constants";
 import { gameReducer, createInitialState } from "../lib/tetris/reducer";
 import { getGhostPosition, getTetrominoShape } from "../lib/tetris/utils";
 import { TetrominoType } from "../lib/tetris/types";
-import { generateUsername } from "../lib/username";
 import usePartySocket from "partysocket/react";
 
 export function Tetris() {
@@ -14,14 +13,13 @@ export function Tetris() {
   const [players, setPlayers] = useState<
     Array<{
       id: string;
+      username: string;
       board: (string | null)[][];
       score: number;
       level: number;
       lines: number;
     }>
   >([]);
-  const [playerNames, setPlayerNames] = useState<Record<string, string>>({});
-
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
     room: "tetris",
@@ -29,14 +27,6 @@ export function Tetris() {
       const data = JSON.parse(event.data);
       if (data.players) {
         setPlayers(data.players);
-        // Generate usernames for new players
-        const newPlayerNames = { ...playerNames };
-        data.players.forEach((player: { id: string }) => {
-          if (!newPlayerNames[player.id]) {
-            newPlayerNames[player.id] = generateUsername();
-          }
-        });
-        setPlayerNames(newPlayerNames);
       }
     },
   });
@@ -219,9 +209,8 @@ export function Tetris() {
                       socket.id === player.id ? "font-bold text-blue-400" : ""
                     }
                   >
-                    {playerNames[player.id] ||
-                      `Player ${player.id.slice(0, 4)}`}
-                    {socket.id === player.id && " (You)"}
+                    {player.username}
+                    {socket.id === player.id ? " (You)" : ""}
                   </span>
                 </div>
               ))}
@@ -240,8 +229,7 @@ export function Tetris() {
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: "#22c55e" }}
                     />
-                    {playerNames[player.id] ||
-                      `Player ${player.id.slice(0, 4)}`}
+                    {player.username}
                   </div>
                   {player.board.map((row, y) => (
                     <div key={y} className="flex">
