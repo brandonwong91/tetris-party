@@ -4,19 +4,27 @@ import type * as Party from "partykit/server";
 type GameState = {
   players: Map<string, PlayerState>;
   usernames: Map<string, string>;
+  isMultiplayerMode: boolean;
+  gameStarted: boolean;
 };
+
+type PlayerStatus = "online" | "join" | "playing";
 
 type PlayerState = {
   board: (string | null)[][];
   score: number;
   level: number;
   lines: number;
+  isGameOver: boolean;
+  status: PlayerStatus;
 };
 
 export default class TetrisParty implements Party.Server {
   private gameState: GameState = {
     players: new Map(),
     usernames: new Map(),
+    isMultiplayerMode: false,
+    gameStarted: false,
   };
 
   constructor(readonly party: Party.Party) {}
@@ -30,6 +38,8 @@ export default class TetrisParty implements Party.Server {
       score: 0,
       level: 1,
       lines: 0,
+      isGameOver: false,
+      status: "online",
     });
 
     // Generate username if not exists
@@ -47,9 +57,48 @@ export default class TetrisParty implements Party.Server {
       const update = JSON.parse(message);
       const player = this.gameState.players.get(sender.id);
 
+      if (update.type === "JOIN_MULTIPLAYER") {
+        this.gameState.isMultiplayerMode = true;
+        if (player) {
+          player.status = "join";
+          player.isGameOver = false;
+        }
+        this.broadcastGameState();
+        return;
+      }
+
+      if (
+        update.type === "START_MULTIPLAYER" &&
+        this.gameState.players.size > 1
+      ) {
+        this.gameState.gameStarted = true;
+        // Update all joined players to playing status
+        for (const [, playerState] of this.gameState.players) {
+          if (playerState.status === "join") {
+            playerState.status = "playing";
+            playerState.isGameOver = false;
+          }
+        }
+        this.party.broadcast(JSON.stringify({ type: "START_GAME" }));
+        return;
+      }
+
       if (player) {
         // Update player state
-        Object.assign(player, update);
+        if (update.board) {
+          Object.assign(player, update);
+          // Check if all active players are game over
+          const activePlayers = Array.from(
+            this.gameState.players.values()
+          ).filter((p) => p.status === "playing");
+          if (
+            activePlayers.length > 0 &&
+            activePlayers.every((p) => p.isGameOver)
+          ) {
+            this.gameState.gameStarted = false;
+            this.gameState.isMultiplayerMode = false;
+          }
+        }
         // Broadcast updated game state to all players
         this.broadcastGameState();
       }
@@ -75,6 +124,12 @@ export default class TetrisParty implements Party.Server {
       })
     );
 
-    this.party.broadcast(JSON.stringify({ players }));
+    this.party.broadcast(
+      JSON.stringify({
+        players,
+        isMultiplayerMode: this.gameState.isMultiplayerMode,
+        gameStarted: this.gameState.gameStarted,
+      })
+    );
   }
 }

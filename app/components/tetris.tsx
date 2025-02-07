@@ -14,12 +14,17 @@ export function Tetris() {
     Array<{
       id: string;
       username: string;
+      status: string;
       board: (string | null)[][];
       score: number;
       level: number;
       lines: number;
+      isGameOver: boolean;
     }>
   >([]);
+  const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+
   const socket = usePartySocket({
     host: PARTYKIT_HOST,
     room: "tetris",
@@ -27,6 +32,15 @@ export function Tetris() {
       const data = JSON.parse(event.data);
       if (data.players) {
         setPlayers(data.players);
+        if (data.isMultiplayerMode !== undefined) {
+          setIsMultiplayerMode(data.isMultiplayerMode);
+        }
+        if (data.gameStarted !== undefined) {
+          setGameStarted(data.gameStarted);
+        }
+        if (data.type === "START_GAME") {
+          dispatch({ type: "START_GAME" });
+        }
       }
     },
   });
@@ -69,7 +83,7 @@ export function Tetris() {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    if (!state.currentPiece || state.isGameOver || state.isPaused) return;
+    if (!state.currentPiece || state.isPaused) return;
 
     const interval = setInterval(() => {
       dispatch({ type: "MOVE_DOWN" });
@@ -82,6 +96,7 @@ export function Tetris() {
         score: state.score,
         level: state.level,
         lines: state.lines,
+        isGameOver: state.isGameOver,
       })
     );
 
@@ -195,7 +210,7 @@ export function Tetris() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative">
       <div className="flex gap-8">
         <div className="flex flex-col gap-4">
           <div className="p-4 bg-gray-800 border border-gray-700 rounded">
@@ -210,13 +225,15 @@ export function Tetris() {
                     }
                   >
                     {player.username}
-                    {socket.id === player.id ? " (You)" : ""}
+                    {player.status === "join" && (
+                      <span className="text-yellow-500 ml-1">(J)</span>
+                    )}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {players
               .filter((player) => player.id !== socket.id)
               .map((player) => (
@@ -227,30 +244,39 @@ export function Tetris() {
                   <div className="text-sm mb-2 flex items-center gap-2">
                     <div
                       className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: "#22c55e" }}
+                      style={{
+                        backgroundColor: player.isGameOver
+                          ? "#ef4444"
+                          : "#22c55e",
+                      }}
                     />
                     {player.username}
+                    {player.isGameOver && (
+                      <span className="ml-2 text-red-500">(Game Over)</span>
+                    )}
                   </div>
-                  {player.board.map((row, y) => (
-                    <div key={y} className="flex">
-                      {row.map((cell, x) => (
-                        <div
-                          key={`${y}-${x}`}
-                          className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
-                        >
-                          {cell && (
-                            <div
-                              className="w-full h-full"
-                              style={{
-                                backgroundColor:
-                                  TETROMINOS[cell as TetrominoType].color,
-                              }}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                  <div className="grid grid-flow-row">
+                    {player.board.map((row, y) => (
+                      <div key={y} className="flex">
+                        {row.map((cell, x) => (
+                          <div
+                            key={`${y}-${x}`}
+                            className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
+                          >
+                            {cell && (
+                              <div
+                                className="w-full h-full"
+                                style={{
+                                  backgroundColor:
+                                    TETROMINOS[cell as TetrominoType].color,
+                                }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                   <div className="text-sm mt-2">Score: {player.score}</div>
                 </div>
               ))}
@@ -305,14 +331,61 @@ export function Tetris() {
           </div>
         </div>
       </div>
-      {(state.isGameOver || !state.currentPiece) && (
-        <button
-          className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded"
-          onClick={() => dispatch({ type: "START_GAME" })}
-        >
-          {state.isGameOver ? "Game Over - Play Again" : "Start Game"}
-        </button>
+
+      {/* Game state overlays and controls */}
+      {!isMultiplayerMode && !state.currentPiece && (
+        <div className="mt-4 flex gap-4">
+          <button
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded"
+            onClick={() => dispatch({ type: "START_GAME" })}
+          >
+            Start Single Player
+          </button>
+          <button
+            className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded"
+            onClick={() =>
+              socket.send(JSON.stringify({ type: "JOIN_MULTIPLAYER" }))
+            }
+          >
+            Join Multiplayer
+          </button>
+        </div>
       )}
+
+      {isMultiplayerMode && !gameStarted && (
+        <div className="mt-4 text-center">
+          <p className="mb-2">
+            Waiting for players... ({players.length} connected)
+          </p>
+          {players.length > 1 && (
+            <button
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded"
+              onClick={() =>
+                socket.send(JSON.stringify({ type: "START_MULTIPLAYER" }))
+              }
+            >
+              Start Game
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Game over overlay */}
+      {state.isGameOver && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="text-center">
+            <div className="text-4xl font-bold mb-4">GAME OVER</div>
+            <button
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded"
+              onClick={() => dispatch({ type: "START_GAME" })}
+            >
+              Play Again
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pause overlay */}
       {state.isPaused && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="text-4xl font-bold">PAUSED</div>

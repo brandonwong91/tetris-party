@@ -35,7 +35,7 @@ export const rotateMatrix = <T>(matrix: readonly (readonly T[])[]) => {
     }
   }
 
-  return rotated as typeof matrix;
+  return rotated as readonly (readonly T[])[];
 };
 
 export const getTetrominoShape = (tetromino: Tetromino) => {
@@ -43,7 +43,7 @@ export const getTetrominoShape = (tetromino: Tetromino) => {
   const rotations = tetromino.rotation / 90;
 
   for (let i = 0; i < rotations; i++) {
-    shape = rotateMatrix(shape);
+    shape = rotateMatrix(shape) as typeof shape;
   }
 
   return shape;
