@@ -48,11 +48,13 @@ export function Tetris() {
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
+    let touchStartTime = 0;
     const minSwipeDistance = 30;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -62,6 +64,19 @@ export function Tetris() {
       const touchEndY = e.changedTouches[0].clientY;
       const deltaX = touchEndX - touchStartX;
       const deltaY = touchEndY - touchStartY;
+      const touchDuration = Date.now() - touchStartTime;
+
+      // Check if it's a tap (short duration and minimal movement)
+      if (
+        touchDuration < 200 &&
+        Math.abs(deltaX) < 10 &&
+        Math.abs(deltaY) < 10
+      ) {
+        if (e.target instanceof Element && e.target.closest(".game-board")) {
+          dispatch({ type: "ROTATE" });
+          return;
+        }
+      }
 
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         // Horizontal swipe
@@ -74,12 +89,8 @@ export function Tetris() {
         }
       } else {
         // Vertical swipe
-        if (Math.abs(deltaY) > minSwipeDistance) {
-          if (deltaY > 0) {
-            dispatch({ type: "MOVE_DOWN" });
-          } else {
-            dispatch({ type: "ROTATE" });
-          }
+        if (Math.abs(deltaY) > minSwipeDistance && deltaY > 0) {
+          dispatch({ type: "MOVE_DOWN" });
         }
       }
     };
