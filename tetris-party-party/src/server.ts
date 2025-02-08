@@ -99,7 +99,40 @@ export default class TetrisParty implements Party.Server {
       if (player) {
         // Update player state
         if (update.board) {
+          const prevLines = player.lines;
           Object.assign(player, update);
+          // Handle line clears and send garbage lines
+          const linesCleared = player.lines - prevLines;
+          if (linesCleared > 0 && this.gameState.isMultiplayerMode) {
+            // Get all active players except the sender
+            const otherPlayers = Array.from(this.gameState.players.entries())
+              .filter(
+                ([id, p]) =>
+                  id !== sender.id && p.status === "playing" && !p.isGameOver
+              )
+              .map(([id]) => id);
+
+            if (otherPlayers.length > 0) {
+              // Create garbage lines with one random empty cell
+              const garbageLines = Array(linesCleared)
+                .fill(null)
+                .map(() => {
+                  const emptyCell = Math.floor(Math.random() * 10);
+                  return Array(10)
+                    .fill("G")
+                    .map((cell, i) => (i === emptyCell ? null : cell));
+                });
+
+              // Send garbage lines to other players
+              this.party.broadcast(
+                JSON.stringify({
+                  type: "GARBAGE_LINES",
+                  lines: garbageLines,
+                  recipients: otherPlayers,
+                })
+              );
+            }
+          }
           // Check if all active players are game over
           const activePlayers = Array.from(
             this.gameState.players.values()

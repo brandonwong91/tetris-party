@@ -45,7 +45,12 @@ const getPoints = (lines: number): number => {
   }
 };
 
-const movePiece = (state: GameState, dx: number, dy: number): GameState => {
+const movePiece = (
+  state: GameState,
+  dx: number,
+  dy: number,
+  socket?: WebSocket
+): GameState => {
   if (!state.currentPiece || state.isGameOver || state.isPaused) {
     return state;
   }
@@ -69,6 +74,19 @@ const movePiece = (state: GameState, dx: number, dy: number): GameState => {
     const newLines = state.lines + linesCleared;
     const newLevel = Math.floor(newLines / LEVEL_LINES) + 1;
     const nextPiece = createTetromino(getRandomTetrominoType());
+
+    // Send linesCleared information to the server
+    if (linesCleared > 0 && socket) {
+      socket.send(
+        JSON.stringify({
+          board: clearedBoard,
+          score: state.score + points,
+          level: newLevel,
+          lines: newLines,
+          linesCleared,
+        })
+      );
+    }
 
     // Check if the next piece can be placed
     if (!isValidPosition(clearedBoard, nextPiece)) {
@@ -188,6 +206,15 @@ export const gameReducer = (
 
     case "GAME_OVER":
       return { ...state, isGameOver: true };
+
+    case "GARBAGE_LINES":
+      if (!state.isGameOver && !state.isPaused) {
+        const newBoard = state.board
+          .slice(action.lines.length)
+          .concat(action.lines);
+        return { ...state, board: newBoard };
+      }
+      return state;
 
     default:
       return state;

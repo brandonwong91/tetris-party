@@ -35,4 +35,5 @@ export type GameAction =
   | { type: "HOLD_PIECE" }
   | { type: "START_GAME" }
   | { type: "PAUSE_GAME" }
-  | { type: "GAME_OVER" };
+  | { type: "GAME_OVER" }
+  | { type: "GARBAGE_LINES"; lines: (TetrominoType | null)[][] };

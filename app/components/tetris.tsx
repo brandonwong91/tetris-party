@@ -30,7 +30,12 @@ export function Tetris() {
     room: "tetris",
     onMessage(event) {
       const data = JSON.parse(event.data);
-      if (data.players) {
+      if (
+        data.type === "GARBAGE_LINES" &&
+        data.recipients.includes(socket.id)
+      ) {
+        dispatch({ type: "GARBAGE_LINES", lines: data.lines });
+      } else if (data.players) {
         setPlayers(data.players);
         if (data.isMultiplayerMode !== undefined) {
           setIsMultiplayerMode(data.isMultiplayerMode);
@@ -182,11 +187,15 @@ export function Tetris() {
     socket,
   ]);
 
-  const renderCell = (cell: TetrominoType | null, ghost = false) => {
+  const renderCell = (cell: TetrominoType | null | "G", ghost = false) => {
     if (!cell) return null;
 
     const style = {
-      backgroundColor: ghost ? "#ffffff1a" : TETROMINOS[cell].color,
+      backgroundColor: ghost
+        ? "#ffffff1a"
+        : cell === "G"
+        ? "#4b5563"
+        : TETROMINOS[cell as TetrominoType].color,
       border: "1px solid rgba(255, 255, 255, 0.3)",
     };
 
@@ -282,10 +291,7 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-2">
       <div className="flex-col gap-2 lg:flex-row flex">
-        <div
-          className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2"
-          key={Date.now().toString()}
-        >
+        <div className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
           {players
             .filter((player) => player.id !== socket.id)
             .map((player) => (
@@ -320,7 +326,9 @@ export function Tetris() {
                               className="w-full h-full"
                               style={{
                                 backgroundColor:
-                                  TETROMINOS[cell as TetrominoType].color,
+                                  cell === "G"
+                                    ? "#4b5563"
+                                    : TETROMINOS[cell as TetrominoType].color,
                               }}
                             />
                           )}
@@ -484,4 +492,3 @@ export function Tetris() {
     </div>
   );
 }
-// Add touch controls
