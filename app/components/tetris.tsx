@@ -286,7 +286,7 @@ export function Tetris() {
             .map((player) => (
               <div
                 key={player.id}
-                className="border border-gray-700 p-1 w-fit bg-gray-800"
+                className="border border-gray-700 p-1 h-fit w-fit bg-gray-800"
               >
                 <div className="text-xs mb-1 flex items-center gap-1">
                   <div
