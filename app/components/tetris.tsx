@@ -45,7 +45,64 @@ export function Tetris() {
     },
   });
   const [showControls, setShowControls] = useState(false);
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const minSwipeDistance = 30;
 
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (state.isGameOver || !e.changedTouches[0]) return;
+
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX > 0) {
+            dispatch({ type: "MOVE_RIGHT" });
+          } else {
+            dispatch({ type: "MOVE_LEFT" });
+          }
+        }
+      } else {
+        // Vertical swipe
+        if (Math.abs(deltaY) > minSwipeDistance) {
+          if (deltaY > 0) {
+            dispatch({ type: "MOVE_DOWN" });
+          } else {
+            dispatch({ type: "ROTATE" });
+          }
+        }
+      }
+    };
+
+    const handleDoubleTap = (e: TouchEvent | MouseEvent) => {
+      e.preventDefault();
+      if (e.target instanceof Element && e.target.closest(".game-board")) {
+        dispatch({ type: "HOLD_PIECE" });
+      } else {
+        dispatch({ type: "HARD_DROP" });
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("dblclick", handleDoubleTap);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("dblclick", handleDoubleTap);
+    };
+  }, [state.isGameOver, dispatch]);
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (state.isGameOver) return;
@@ -116,7 +173,7 @@ export function Tetris() {
     if (!cell) return null;
 
     const style = {
-      backgroundColor: ghost ? "#ffffff33" : TETROMINOS[cell].color,
+      backgroundColor: ghost ? "#ffffff1a" : TETROMINOS[cell].color,
       border: "1px solid rgba(255, 255, 255, 0.3)",
     };
 
@@ -162,7 +219,7 @@ export function Tetris() {
         {row.map((cell, x) => (
           <div
             key={`${y}-${x}`}
-            className="w-6 h-6 border-dotted border-gray-900 border-y-2 border-x-2"
+            className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 border-dotted border-gray-900 border-y-2 border-x-2"
           >
             {renderCell(cell)}
           </div>
@@ -210,9 +267,9 @@ export function Tetris() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative">
-      <div className="flex gap-8">
-        <div className="flex flex-col gap-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl mx-auto">
+        <div className="flex flex-col gap-4 w-full lg:w-auto order-2 lg:order-1">
           <div className="p-4 bg-gray-800 border border-gray-700 rounded">
             <h2 className="text-xl mb-4">Online Players</h2>
             <div className="space-y-2">
@@ -233,13 +290,13 @@ export function Tetris() {
               ))}
             </div>
           </div>
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-4">
             {players
               .filter((player) => player.id !== socket.id)
               .map((player) => (
                 <div
                   key={player.id}
-                  className="border border-gray-700 p-2 bg-gray-800 h-fit"
+                  className="border border-gray-700 p-2 bg-gray-800"
                 >
                   <div className="text-sm mb-2 flex items-center gap-2">
                     <div
@@ -261,7 +318,7 @@ export function Tetris() {
                         {row.map((cell, x) => (
                           <div
                             key={`${y}-${x}`}
-                            className="w-4 h-4 border-dotted border-gray-900 border-y-2 border-x-2"
+                            className="w-3 h-3 sm:w-4 sm:h-4 border-dotted border-gray-900 border-y-2 border-x-2"
                           >
                             {cell && (
                               <div
@@ -282,19 +339,19 @@ export function Tetris() {
               ))}
           </div>
         </div>
-        <div className="border border-gray-700 p-2 bg-gray-800 h-fit">
-          {renderBoard()}
+        <div className="border border-gray-700 p-2 bg-gray-800 mx-auto order-1 lg:order-2">
+          <div className="grid grid-flow-row game-board">{renderBoard()}</div>
         </div>
-        <div className="flex flex-col gap-4">
-          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+        <div className="flex flex-row lg:flex-col gap-4 order-3 overflow-x-auto lg:overflow-x-visible">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded min-w-[160px]">
             <h2 className="text-xl mb-2">Next Piece</h2>
             {state.nextPiece && renderPiece(state.nextPiece.type)}
           </div>
-          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded min-w-[160px]">
             <h2 className="text-xl mb-2">Held Piece</h2>
             {renderPiece(state.heldPiece?.type || null)}
           </div>
-          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded min-w-[160px]">
             <div className="mb-2">
               <h2 className="text-xl">Score</h2>
               <p className="text-2xl font-bold">{state.score}</p>
@@ -308,7 +365,7 @@ export function Tetris() {
               <p className="text-2xl font-bold">{state.lines}</p>
             </div>
           </div>
-          <div className="p-4 bg-gray-800 border border-gray-700 rounded">
+          <div className="p-4 bg-gray-800 border border-gray-700 rounded min-w-[160px]">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl">Controls</h2>
               <button
@@ -333,16 +390,16 @@ export function Tetris() {
       </div>
 
       {/* Game state overlays and controls */}
-      {!isMultiplayerMode && !state.currentPiece && (
-        <div className="mt-4 flex gap-4">
+      {((!isMultiplayerMode && !state.currentPiece) || state.isGameOver) && (
+        <div className="mt-4 flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded w-full sm:w-auto"
             onClick={() => dispatch({ type: "START_GAME" })}
           >
-            Start Single Player
+            {state.isGameOver ? "Play Again" : "Start Single Player"}
           </button>
           <button
-            className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded"
+            className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded w-full sm:w-auto"
             onClick={() =>
               socket.send(JSON.stringify({ type: "JOIN_MULTIPLAYER" }))
             }
@@ -359,7 +416,7 @@ export function Tetris() {
           </p>
           {players.length > 1 && (
             <button
-              className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded"
+              className="px-4 py-2 bg-green-500 hover:bg-green-600 rounded w-full sm:w-auto"
               onClick={() =>
                 socket.send(JSON.stringify({ type: "START_MULTIPLAYER" }))
               }
@@ -367,21 +424,6 @@ export function Tetris() {
               Start Game
             </button>
           )}
-        </div>
-      )}
-
-      {/* Game over overlay */}
-      {state.isGameOver && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="text-center">
-            <div className="text-4xl font-bold mb-4">GAME OVER</div>
-            <button
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded"
-              onClick={() => dispatch({ type: "START_GAME" })}
-            >
-              Play Again
-            </button>
-          </div>
         </div>
       )}
 
@@ -394,3 +436,4 @@ export function Tetris() {
     </div>
   );
 }
+// Add touch controls

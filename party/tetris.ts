@@ -110,6 +110,20 @@ export default class TetrisParty implements Party.Server {
   onClose(conn: Party.Connection) {
     // Remove player when they disconnect
     this.gameState.players.delete(conn.id);
+    this.gameState.usernames.delete(conn.id);
+
+    // Reset game state if no players are left
+    if (this.gameState.players.size === 0) {
+      this.gameState.isMultiplayerMode = false;
+      this.gameState.gameStarted = false;
+    }
+
+    // Reset multiplayer mode if only one player is left
+    if (this.gameState.players.size === 1 && this.gameState.isMultiplayerMode) {
+      this.gameState.isMultiplayerMode = false;
+      this.gameState.gameStarted = false;
+    }
+
     this.broadcastGameState();
   }
 
