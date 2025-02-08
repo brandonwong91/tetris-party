@@ -373,10 +373,17 @@ export function Tetris() {
             </div>
           </div>
         </div>
-        <div className="border border-gray-700 p-1 bg-gray-800 mx-auto order-3 lg:order-2 h-fit">
+        <div className="border border-gray-700 p-1 bg-gray-800 mx-auto order-3 lg:order-2 h-fit relative">
           <div className="grid grid-flow-row game-board h-fit">
             {renderBoard()}
           </div>
+          <button
+            onClick={() => dispatch({ type: "PAUSE_GAME" })}
+            className="md:hidden absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center"
+            aria-label="Pause game"
+          >
+            {state.isPaused ? "▶" : "⏸"}
+          </button>
         </div>
         <div className="flex flex-row lg:flex-col gap-2  overflow-x-auto lg:overflow-x-visible order-1 flex-wrap">
           <div className="p-2 bg-gray-800 border border-gray-700 rounded min-w-[120px]">
