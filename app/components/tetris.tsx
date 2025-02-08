@@ -38,8 +38,10 @@ export function Tetris() {
         if (data.gameStarted !== undefined) {
           setGameStarted(data.gameStarted);
         }
-        if (data.type === "START_GAME") {
-          dispatch({ type: "START_GAME" });
+        if (data.type === "START_GAME" && data.players) {
+          if (data.players.includes(socket.id)) {
+            dispatch({ type: "START_GAME" });
+          }
         }
       }
     },
@@ -280,7 +282,10 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-2">
       <div className="flex-col gap-2 lg:flex-row flex">
-        <div className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
+        <div
+          className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2"
+          key={Date.now().toString()}
+        >
           {players
             .filter((player) => player.id !== socket.id)
             .map((player) => (
@@ -303,7 +308,7 @@ export function Tetris() {
                   )}
                 </div>
                 <div className="grid grid-flow-row">
-                  {player.board.map((row, y) => (
+                  {player.board?.map((row, y) => (
                     <div key={y} className="flex">
                       {row.map((cell, x) => (
                         <div
@@ -334,16 +339,23 @@ export function Tetris() {
             <div className="space-y-1">
               {players.map((player) => (
                 <div key={player.id} className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{
+                      backgroundColor:
+                        player.status === "online"
+                          ? "#22c55e"
+                          : player.status === "join"
+                          ? "#3b82f6"
+                          : "#6b7280",
+                    }}
+                  />
                   <span
                     className={
                       socket.id === player.id ? "font-bold text-blue-400" : ""
                     }
                   >
                     {player.username}
-                    {player.status === "join" && (
-                      <span className="text-yellow-500 ml-1">(J)</span>
-                    )}
                   </span>
                 </div>
               ))}
@@ -414,7 +426,12 @@ export function Tetris() {
           <button
             className="px-3 py-1 bg-green-500 hover:bg-green-600 rounded w-full sm:w-auto"
             onClick={() =>
-              socket.send(JSON.stringify({ type: "JOIN_MULTIPLAYER" }))
+              socket.send(
+                JSON.stringify({
+                  type: "JOIN_MULTIPLAYER",
+                  id: socket.id,
+                })
+              )
             }
           >
             Join Multiplayer

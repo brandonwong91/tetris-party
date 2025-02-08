@@ -1,5 +1,5 @@
-import { generateUsername } from "@/app/lib/username";
 import type * as Party from "partykit/server";
+import { generateUsername } from "./username";
 
 type GameState = {
   players: Map<string, PlayerState>;
@@ -42,11 +42,9 @@ export default class TetrisParty implements Party.Server {
       status: "online",
     });
 
-    // Generate username if not exists
-    if (!this.gameState.usernames.has(conn.id)) {
-      const username = generateUsername();
-      this.gameState.usernames.set(conn.id, username);
-    }
+    // Generate username
+    const username = generateUsername();
+    this.gameState.usernames.set(conn.id, username);
 
     // Broadcast updated player list
     this.broadcastGameState();
@@ -59,9 +57,11 @@ export default class TetrisParty implements Party.Server {
 
       if (update.type === "JOIN_MULTIPLAYER") {
         this.gameState.isMultiplayerMode = true;
-        if (player) {
-          player.status = "join";
-          player.isGameOver = false;
+        for (const [, playerState] of this.gameState.players) {
+          if (playerState.status === "online") {
+            playerState.status = "join";
+            playerState.isGameOver = false;
+          }
         }
         this.broadcastGameState();
         return;
@@ -72,14 +72,27 @@ export default class TetrisParty implements Party.Server {
         this.gameState.players.size > 1
       ) {
         this.gameState.gameStarted = true;
-        // Update all joined players to playing status
-        for (const [, playerState] of this.gameState.players) {
-          if (playerState.status === "join") {
+        // Get all joined players
+        const joinedPlayers = Array.from(this.gameState.players.entries())
+          .filter(([, state]) => state.status === "join")
+          .map(([id]) => id);
+
+        // Update joined players to playing status
+        for (const playerId of joinedPlayers) {
+          const playerState = this.gameState.players.get(playerId);
+          if (playerState) {
             playerState.status = "playing";
             playerState.isGameOver = false;
           }
         }
-        this.party.broadcast(JSON.stringify({ type: "START_GAME" }));
+
+        // Broadcast game start to all players
+        this.party.broadcast(
+          JSON.stringify({
+            type: "START_GAME",
+            players: joinedPlayers,
+          })
+        );
         return;
       }
 
@@ -147,3 +160,5 @@ export default class TetrisParty implements Party.Server {
     );
   }
 }
+
+TetrisParty satisfies Party.Worker;
