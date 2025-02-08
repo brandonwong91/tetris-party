@@ -339,24 +339,35 @@ export function Tetris() {
             <div className="space-y-1">
               {players.map((player) => (
                 <div key={player.id} className="flex items-center gap-1">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{
-                      backgroundColor:
-                        player.status === "online"
-                          ? "#22c55e"
-                          : player.status === "join"
-                          ? "#3b82f6"
-                          : "#6b7280",
-                    }}
-                  />
-                  <span
-                    className={
-                      socket.id === player.id ? "font-bold text-blue-400" : ""
-                    }
-                  >
-                    {player.username}
-                  </span>
+                  <div className="flex flex-col items-start">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              player.status === "online"
+                                ? "#22c55e"
+                                : player.status === "join"
+                                ? "#3b82f6"
+                                : "#6b7280",
+                          }}
+                        />
+                        <div
+                          className={
+                            socket.id === player.id
+                              ? "font-bold text-blue-400"
+                              : ""
+                          }
+                        >
+                          {player.username}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400 ml-4">
+                      Score: {player.score}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
