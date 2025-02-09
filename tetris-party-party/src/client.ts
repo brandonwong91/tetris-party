@@ -13,16 +13,26 @@ const app = document.getElementById("app") as HTMLDivElement;
 
 function createMonitorUI() {
   app.innerHTML = `
-    <div class="min-h-screen bg-gray-900 text-white p-4">
-      <h1 class="text-2xl font-bold mb-4">PartyKit Server Monitor</h1>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-gray-800 rounded-lg p-4">
-          <h2 class="text-xl font-semibold mb-2">Server Logs</h2>
-          <div id="logs" class="space-y-2 h-[600px] overflow-y-auto"></div>
+    <div class="container">
+      <h1 class="title">
+        PartyKit Server Monitor
+      </h1>
+
+      <div class="grid-layout">
+        <!-- Connected Players Section -->
+        <div class="card">
+          <h2 class="card-title">
+            Connected Players
+          </h2>
+          <div id="players" class="players-grid"></div>
         </div>
-        <div class="bg-gray-800 rounded-lg p-4">
-          <h2 class="text-xl font-semibold mb-2">Connected Players</h2>
-          <div id="players" class="space-y-2"></div>
+
+        <!-- Server Logs Section -->
+        <div class="card">
+          <h2 class="card-title">
+            Server Logs
+          </h2>
+          <div id="logs" class="logs-container"></div>
         </div>
       </div>
     </div>
@@ -34,34 +44,16 @@ function addLog(type: LogEntry["type"], data: unknown) {
   if (!logsContainer) return;
 
   const logEntry = document.createElement("div");
-  logEntry.className = `p-2 rounded ${
-    {
-      connect: "bg-green-900",
-      disconnect: "bg-red-900",
-      message: "bg-gray-700",
-      error: "bg-red-900",
-    }[type]
-  }`;
+  logEntry.className = `log-entry ${type}`;
 
   const timestamp = new Date().toISOString();
   logEntry.innerHTML = `
-    <div class="text-xs text-gray-400">${timestamp}</div>
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-2 h-2 rounded-full ${
-        {
-          connect: "bg-green-500",
-          disconnect: "bg-red-500",
-          message: "bg-blue-500",
-          error: "bg-red-500",
-        }[type]
-      }"></span>
-      <span class="font-medium">${type.toUpperCase()}</span>
+    <div class="log-timestamp">${timestamp}</div>
+    <div class="log-header">
+      <span class="status-indicator ${type}"></span>
+      <span class="log-type">${type.toUpperCase()}</span>
     </div>
-    <pre class="mt-1 text-sm overflow-x-auto">${JSON.stringify(
-      data,
-      null,
-      2
-    )}</pre>
+    <pre class="log-content">${JSON.stringify(data, null, 2)}</pre>
   `;
 
   logsContainer.insertBefore(logEntry, logsContainer.firstChild);
@@ -70,17 +62,41 @@ function addLog(type: LogEntry["type"], data: unknown) {
   }
 }
 
-function updatePlayerList(players: Array<{ id: string; username: string }>) {
+function updatePlayerList(
+  players: Array<{
+    id: string;
+    username: string;
+    board: (string | null)[][];
+    score: number;
+  }>
+) {
   const playersContainer = document.getElementById("players");
   if (!playersContainer) return;
 
   playersContainer.innerHTML = players
     .map(
       (player) => `
-    <div class="flex items-center gap-2 bg-gray-700 p-2 rounded">
-      <div class="w-2 h-2 rounded-full bg-green-500"></div>
-      <span>${player.username}</span>
-      <span class="text-xs text-gray-400">(${player.id})</span>
+    <div class="player-card">
+      <div class="player-header">
+        <div class="status-indicator connect"></div>
+        <span class="player-name">${player.username}</span>
+        <span class="player-id">(${player.id})</span>
+      </div>
+      <div class="player-score">
+        Score: ${player.score}
+      </div>
+      <div class="game-board">
+        ${player.board
+          .map((row) =>
+            row
+              .map(
+                (cell) =>
+                  `<div class="board-cell ${cell ? "filled" : "empty"}"></div>`
+              )
+              .join("")
+          )
+          .join("")}
+      </div>
     </div>
   `
     )
