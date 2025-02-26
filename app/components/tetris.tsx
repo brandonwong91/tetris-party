@@ -485,7 +485,10 @@ export function Tetris() {
 
       {/* Pause overlay */}
       {state.isPaused && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer"
+          onClick={() => dispatch({ type: "PAUSE_GAME" })}
+        >
           <div className="text-4xl font-bold">PAUSED</div>
         </div>
       )}
