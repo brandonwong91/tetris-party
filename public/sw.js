@@ -8,6 +8,14 @@ const ASSETS_TO_CACHE = [
   "/file.svg",
   "/next.svg",
   "/vercel.svg",
+  "/_next/static/chunks/main.js",
+  "/_next/static/chunks/app.js",
+  "/_next/static/css/app.css",
+  "/app/lib/tetris/constants.js",
+  "/app/lib/tetris/reducer.js",
+  "/app/lib/tetris/utils.js",
+  "/app/lib/tetris/types.js",
+  "/app/components/tetris.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -58,6 +66,24 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
+          if (event.request.headers.get("accept")?.includes("text/html")) {
+            return caches.match("/");
+          }
+          if (
+            event.request.url.includes("partysocket") ||
+            event.request.url.includes("partykit")
+          ) {
+            return new Response(
+              JSON.stringify({
+                type: "OFFLINE_MODE",
+                isMultiplayerMode: false,
+                gameStarted: false,
+              }),
+              {
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
           return new Response("Offline mode: Unable to fetch resource");
         });
     })

@@ -31,6 +31,12 @@ export function Tetris() {
     room: "tetris",
     onMessage(event) {
       const data = JSON.parse(event.data);
+      if (data.type === "OFFLINE_MODE") {
+        setIsMultiplayerMode(false);
+        setGameStarted(false);
+        setPlayers([]);
+        return;
+      }
       if (
         data.type === "GARBAGE_LINES" &&
         data.recipients.includes(socket.id)
@@ -166,15 +172,17 @@ export function Tetris() {
     }, INITIAL_GRAVITY / state.level);
 
     // Send game state to server
-    socket.send(
-      JSON.stringify({
-        board: state.board,
-        score: state.score,
-        level: state.level,
-        lines: state.lines,
-        isGameOver: state.isGameOver,
-      })
-    );
+    if (isMultiplayerMode) {
+      socket.send(
+        JSON.stringify({
+          board: state.board,
+          score: state.score,
+          level: state.level,
+          lines: state.lines,
+          isGameOver: state.isGameOver,
+        })
+      );
+    }
 
     return () => clearInterval(interval);
   }, [
