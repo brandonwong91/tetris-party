@@ -7,6 +7,7 @@ import { gameReducer, createInitialState } from "../lib/tetris/reducer";
 import { getGhostPosition, getTetrominoShape } from "../lib/tetris/utils";
 import { TetrominoType } from "../lib/tetris/types";
 import usePartySocket from "partysocket/react";
+import PushComponent from "./push";
 
 export function Tetris() {
   const [state, dispatch] = useReducer(gameReducer, null, createInitialState);
@@ -290,6 +291,7 @@ export function Tetris() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-2">
+      <PushComponent />
       <h1 className="text-4xl font-bold mb-8 text-center">Tetris Party</h1>
       <div className="flex-col gap-2 lg:flex-row flex">
         <div className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
