@@ -204,36 +204,49 @@ function InstallPrompt() {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Install App</h3>
-      {isIOS ? (
-        <div className="p-4 bg-blue-50 text-blue-700 rounded-md">
-          <p>
-            To install this app on your iOS device, tap the share button
-            <span role="img" aria-label="share icon" className="mx-1">
-              ⎋
-            </span>
-            and then &quot;Add to Home Screen&quot;
-            <span role="img" aria-label="plus icon" className="mx-1">
-              ➕
-            </span>
-            .
-          </p>
-        </div>
-      ) : deferredPrompt ? (
-        <button
-          onClick={handleInstall}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Install App
-        </button>
-      ) : (
-        <div className="p-4 bg-blue-50 text-blue-700 rounded-md">
-          <p>
-            To install this app, use your browser&apos;s install feature or add
-            it to your home screen from the menu.
-          </p>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        {/* <h3 className="text-lg font-semibold">Tetris Party</h3> */}
+        {!isStandalone && (
+          <div className="relative">
+            <button
+              className="p-2 text-blue-600 hover:text-blue-700 transition-colors"
+              onClick={isIOS ? undefined : handleInstall}
+              title="Install App"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15M9 12l3 3m0 0l3-3m-3 3V2.25"
+                />
+              </svg>
+            </button>
+            <div className="absolute z-10 w-64 p-2 bg-white border rounded-md shadow-lg transform -translate-x-1/2 left-1/2 mt-2 invisible group-hover:visible">
+              {isIOS ? (
+                <p className="text-sm text-gray-600">
+                  Tap the share button (⎋) and then &quot;Add to Home
+                  Screen&quot; (➕) to install
+                </p>
+              ) : deferredPrompt ? (
+                <p className="text-sm text-gray-600">
+                  Click to install the app on your device
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Use your browser&apos;s install feature or add to home screen
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
