@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
+import { checkForUpdates, clearCache } from "../lib/version";
 import { PARTYKIT_HOST } from "../lib/constants";
 import { INITIAL_GRAVITY, TETROMINOS } from "../lib/tetris/constants";
 import { gameReducer, createInitialState } from "../lib/tetris/reducer";
@@ -59,6 +60,21 @@ export function Tetris() {
     },
   });
   const [showControls, setShowControls] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      const hasNewVersion = await checkForUpdates();
+      setHasUpdate(hasNewVersion);
+    };
+    checkUpdate();
+  }, []);
+
+  const handleTitleClick = async () => {
+    if (hasUpdate) {
+      await clearCache();
+    }
+  };
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
@@ -299,8 +315,18 @@ export function Tetris() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-2">
-      <h1 className="text-4xl font-bold mb-8 text-center flex items-center">
-        Tetris Party <PushComponent />
+      <h1
+        className={`text-4xl font-bold mb-8 text-center flex items-center ${
+          hasUpdate ? "cursor-pointer hover:text-blue-400" : ""
+        } relative`}
+        onClick={handleTitleClick}
+        title={hasUpdate ? "Click to update to the latest version" : undefined}
+      >
+        Tetris Party{" "}
+        {hasUpdate && (
+          <span className="absolute -top-2 -right-4 h-3 w-3 bg-red-500 rounded-full animate-pulse" />
+        )}{" "}
+        <PushComponent />
       </h1>
       <div className="flex-col gap-2 lg:flex-row flex">
         <div className="flex xs:grid xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2">
