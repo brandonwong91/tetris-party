@@ -316,8 +316,8 @@ export function Tetris() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white relative p-2">
       <h1
-        className={`text-4xl font-bold mb-8 text-center flex items-center ${
-          hasUpdate ? "cursor-pointer hover:text-blue-400" : ""
+        className={`text-4xl font-bold mb-8 text-center flex items-center cursor-pointer ${
+          hasUpdate ? "hover:text-blue-400" : ""
         } relative`}
         onClick={handleTitleClick}
         title={hasUpdate ? "Click to update to the latest version" : undefined}
